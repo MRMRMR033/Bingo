@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Bingo.Models
 {
@@ -7,9 +6,17 @@ namespace Bingo.Models
     {
         public int Id { get; set; }
         public string Folio { get; set; }
-        public int GameId { get; set; } // Clave foránea para la relación con GameModel
-        public string Numbers { get; set; } // este string va a guardar los valores de la matriz
-        public bool IsActive { get; set; }
 
+        // Clave foránea para la relación con GameModel
+        public int GameId { get; set; }
+
+        // Navegación a la entidad relacionada (GameModel)
+        [ForeignKey("GameId")]
+        public GameModel Game { get; set; }
+
+        public string NumbersRowOne { get; set; }
+        public string NumbersRowTwo { get; set; }
+        public string NumbersRowTree { get; set; }
+        public bool IsActive { get; set; }
     }
 }

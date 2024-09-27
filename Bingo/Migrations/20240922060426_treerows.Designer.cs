@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bingo.Migrations
 {
     [DbContext(typeof(DataBaseContext))]
-    [Migration("20240915090453_init")]
-    partial class init
+    [Migration("20240922060426_treerows")]
+    partial class treerows
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,18 +39,21 @@ namespace Bingo.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("GameModelId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Numbers")
+                    b.Property<string>("NumbersRowOne")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumbersRowTree")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumbersRowTwo")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GameModelId");
+                    b.HasIndex("GameId");
 
                     b.ToTable("Cards");
                 });
@@ -62,6 +65,9 @@ namespace Bingo.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DrawnNumbers")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("EndAt")
                         .HasColumnType("datetime2");
@@ -176,9 +182,13 @@ namespace Bingo.Migrations
 
             modelBuilder.Entity("Bingo.Models.CardsModel", b =>
                 {
-                    b.HasOne("Bingo.Models.GameModel", null)
+                    b.HasOne("Bingo.Models.GameModel", "Game")
                         .WithMany("Cards")
-                        .HasForeignKey("GameModelId");
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
                 });
 
             modelBuilder.Entity("Bingo.Models.GameModel", b =>

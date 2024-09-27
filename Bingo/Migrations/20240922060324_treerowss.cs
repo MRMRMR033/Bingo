@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Bingo.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class treerowss : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,8 @@ namespace Bingo.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     StartAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    DrawnNumbers = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -97,24 +98,26 @@ namespace Bingo.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Folio = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GameId = table.Column<int>(type: "int", nullable: false),
-                    Numbers = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    GameModelId = table.Column<int>(type: "int", nullable: true)
+                    NumbersRowOne = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumbersRowTwo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumbersRowTree = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cards", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Cards_Games_GameModelId",
-                        column: x => x.GameModelId,
+                        name: "FK_Cards_Games_GameId",
+                        column: x => x.GameId,
                         principalTable: "Games",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cards_GameModelId",
+                name: "IX_Cards_GameId",
                 table: "Cards",
-                column: "GameModelId");
+                column: "GameId");
         }
 
         /// <inheritdoc />

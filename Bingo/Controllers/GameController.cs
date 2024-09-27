@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Bingo.Models;
 using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Bingo.Controllers
 {
@@ -23,6 +24,7 @@ namespace Bingo.Controllers
             var games = await _context.Games.Include(g => g.Cards).ToListAsync();
             return View(games);
         }
+
         // GET: GameModels/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -31,9 +33,11 @@ namespace Bingo.Controllers
                 return NotFound();
             }
 
+            // Incluir los cartones relacionados con el juego
             var gameModel = await _context.Games
-                .Include(g => g.Cards) // Incluir cartas relacionadas
+                .Include(g => g.Cards)  // Carga los cartones relacionados
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (gameModel == null)
             {
                 return NotFound();
@@ -51,41 +55,49 @@ namespace Bingo.Controllers
         // POST: GameModels/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id")] GameModel gameModel)
+        public async Task<IActionResult> Create(GameModel gameModel)
         {
             if (ModelState.IsValid)
             {
                 var datetime = DateTime.Now;
-                var bingoCards = GenerateBingoCards(60);
+                var bingoCards = GenerateBingoCards(200); // Genera 200 cartones
 
-                var game = new GameModel()
+                var game = new GameModel
                 {
                     StartAt = datetime,
                     EndAt = null,
                     IsActive = true
                 };
+
                 _context.Add(game);
                 await _context.SaveChangesAsync();
 
                 int gameId = game.Id;
 
-                for (int i = 0; i < 60; i++)
+                for (int i = 0; i < 200; i++)
                 {
-                    var cardString = ConvertCardToString(bingoCards[i]);
+                    var rowOne = string.Join(",", bingoCards[i][0]);
+                    var rowTwo = string.Join(",", bingoCards[i][1]);
+                    var rowThree = string.Join(",", bingoCards[i][2]);
 
                     var card = new CardsModel
                     {
                         Folio = GenerateFolio(datetime),
                         GameId = gameId,
-                        Numbers = cardString, // Guarda el string aquí
+                        NumbersRowOne = rowOne,
+                        NumbersRowTwo = rowTwo,
+                        NumbersRowTree = rowThree,
                         IsActive = true
                     };
+
                     _context.Cards.Add(card);
                 }
+
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));
             }
+
             return View(gameModel);
         }
 
@@ -102,6 +114,7 @@ namespace Bingo.Controllers
             {
                 return NotFound();
             }
+
             return View(gameModel);
         }
 
@@ -184,52 +197,59 @@ namespace Bingo.Controllers
             var randomDigits = new StringBuilder(10);
             for (int i = 0; i < 10; i++)
             {
-                randomDigits.Append(random1.Next(10)); // Corrección del rango de números
+                randomDigits.Append(random1.Next(10));
             }
             return formattedDate + randomDigits;
         }
 
-        private static int[][] GenerateBingoCards(int numberOfCards)
+        // Lógica para generar los cartones de Bingo 90 con 3 filas y 9 columnas
+        private static int[][][] GenerateBingoCards(int numberOfCards)
         {
             int rowsPerCard = 3;
             int columnsPerCard = 9;
-            var bingoCards = new int[numberOfCards][];
+            var bingoCards = new int[numberOfCards][][];
 
             Random rng = new Random();
 
             for (int cardIndex = 0; cardIndex < numberOfCards; cardIndex++)
             {
-                var card = new int[rowsPerCard * columnsPerCard];
-                var usedNumbers = new HashSet<int>(); // Para rastrear los números ya utilizados en la tarjeta
+                var card = new int[rowsPerCard][];
+                for (int row = 0; row < rowsPerCard; row++)
+                {
+                    card[row] = new int[columnsPerCard];
+                }
 
+                var usedNumbers = new HashSet<int>();
+
+                // Rango de números para cada columna
                 for (int col = 0; col < columnsPerCard; col++)
                 {
-                    // Genera números únicos para la columna actual
-                    var columnNumbers = Enumerable.Range(col * 10 + 1, 10)
-                                                  .OrderBy(x => rng.Next())
-                                                  .ToList();
+                    var min = col == 0 ? 1 : col * 10;
+                    var max = col == 8 ? 90 : (col * 10) + 9;
 
-                    int count = 0;
-                    while (count < rowsPerCard)
+                    var columnNumbers = Enumerable.Range(min, max - min + 1).OrderBy(x => rng.Next()).Take(3).ToList();
+
+                    for (int row = 0; row < rowsPerCard; row++)
                     {
-                        // Selecciona un número aleatorio de la lista de números de la columna
-                        int number = columnNumbers[rng.Next(columnNumbers.Count)];
-                        if (!usedNumbers.Contains(number))
+                        if (columnNumbers.Count > 0)
                         {
-                            card[count * columnsPerCard + col] = number;
-                            usedNumbers.Add(number);
-                            count++;
+                            card[row][col] = columnNumbers[0];
+                            columnNumbers.RemoveAt(0);
                         }
-                        // Si el número ya está en uso, selecciona uno nuevo
                     }
+                }
 
-                    // Completa los espacios vacíos en la columna actual
-                    for (int row = rowsPerCard; row < rowsPerCard; row++)
+                // Asegurarse de que cada fila tiene exactamente 5 números
+                for (int row = 0; row < rowsPerCard; row++)
+                {
+                    var numbersInRow = card[row].Where(n => n != 0).ToList();
+                    while (numbersInRow.Count > 5)
                     {
-                        if (card[row * columnsPerCard + col] == 0)
-                        {
-                            card[row * columnsPerCard + col] = 0; // Espacios vacíos
-                        }
+                        numbersInRow.RemoveAt(rng.Next(numbersInRow.Count));
+                    }
+                    for (int col = 0; col < columnsPerCard; col++)
+                    {
+                        card[row][col] = numbersInRow.Contains(card[row][col]) ? card[row][col] : 0;
                     }
                 }
 
@@ -237,26 +257,6 @@ namespace Bingo.Controllers
             }
 
             return bingoCards;
-        }
-
-        private static string ConvertCardToString(int[] card)
-        {
-            var sb = new StringBuilder();
-
-            for (int i = 0; i < card.Length; i++)
-            {
-                sb.Append(card[i]);
-                if (i < card.Length - 1) sb.Append(',');
-            }
-
-            return sb.ToString();
-        }
-
-        private static int[] ConvertStringToCard(string cardString)
-        {
-            return cardString.Split(',')
-                              .Select(int.Parse)
-                              .ToArray();
         }
     }
 }

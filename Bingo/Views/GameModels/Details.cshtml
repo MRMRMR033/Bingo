@@ -1,13 +1,13 @@
 ﻿@model Bingo.Models.GameModel
 
 @{
-    ViewData["Title"] = "Detalles de juego";
+    ViewData["Title"] = "Detalles del Juego de Bingo";
 }
 
-<h1>Details</h1>
+<h1>Detalles del Juego</h1>
 
 <div>
-    <h4>GameModel</h4>
+    <h4>Información del Juego</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -30,15 +30,19 @@
         </dd>
     </dl>
 </div>
+<div>
+    <h4>Verificación de Datos</h4>
+    <p>Número de Cartones: @Model.Cards?.Count() ?? 0</p>
+</div>
 
 <div>
-    <h4>Cards</h4>
+    <h4>Cartones de Bingo Generados</h4>
     <hr />
-    <table class="table">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Folio</th>
-                <th>Numbers</th>
+                <th>Cartón de Bingo</th>
             </tr>
         </thead>
         <tbody>
@@ -47,51 +51,68 @@
                 <tr>
                     <td>@card.Folio</td>
                     <td>
-                        @* Mostrar la matriz de números de la carta *@
-                        @if (!string.IsNullOrEmpty(card.Numbers))
-                        {
-                            // Dividir el string en una lista de enteros
-                            var flatNumbers = card.Numbers.Split(',')
-                            .Select(num => int.TryParse(num, out var n) ? n : (int?)null)
-                            .ToArray();
-
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        @for (int col = 0; col < 9; col++)
-                                        {
-                                            <th>@($"Column {col + 1}")</th>
-                                        }
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @for (int row = 0; row < 3; row++)
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    @for (int col = 1; col <= 9; col++)
                                     {
-                                        <tr>
-                                            @for (int col = 0; col < 9; col++)
-                                            {
-                                                var index = row * 9 + col;
-                                                <td>
-                                                    @if (index < flatNumbers.Length && flatNumbers[index].HasValue)
-                                                    {
-                                                        @flatNumbers[index].Value
-                                                    }
-                                                    else
-                                                    {
-                                                        @* Usar espacio vacío para celdas vacías *@
-                                                        <span>&nbsp;</span>
-                                                    }
-                                                </td>
-                                            }
-                                        </tr>
+                                        <th>@($"Columna {col}")</th>
                                     }
-                                </tbody>
-                            </table>
-                        }
-                        else
-                        {
-                            <p>No numbers available</p>
-                        }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Fila 1 -->
+                                <tr>
+                                    @foreach (var num in card.NumbersRowOne.Split(','))
+                                    {
+                                        <td>
+                                            @if (num == "0")
+                                            {
+                                                <span>&nbsp;</span> <!-- Espacio vacío en lugar de 0 -->
+                                            }
+                                            else
+                                            {
+                                                @num <!-- Mostrar número -->
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+
+                                <!-- Fila 2 -->
+                                <tr>
+                                    @foreach (var num in card.NumbersRowTwo.Split(','))
+                                    {
+                                        <td>
+                                            @if (num == "0")
+                                            {
+                                                <span>&nbsp;</span> <!-- Espacio vacío en lugar de 0 -->
+                                            }
+                                            else
+                                            {
+                                                @num <!-- Mostrar número -->
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+
+                                <!-- Fila 3 -->
+                                <tr>
+                                    @foreach (var num in card.NumbersRowTree.Split(','))
+                                    {
+                                        <td>
+                                            @if (num == "0")
+                                            {
+                                                <span>&nbsp;</span> <!-- Espacio vacío en lugar de 0 -->
+                                            }
+                                            else
+                                            {
+                                                @num <!-- Mostrar número -->
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            </tbody>
+                        </table>
                     </td>
                 </tr>
             }
@@ -100,6 +121,6 @@
 </div>
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Editar Juego</a> |
+    <a asp-action="Index">Volver a la lista de Juegos</a>
 </div>
